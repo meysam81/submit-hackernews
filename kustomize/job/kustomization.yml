@@ -1,0 +1,7 @@
+resources:
+  - ../base
+  - job.yml
+
+images:
+  - name: ghcr.io/meysam81/submit-hackernews
+    newTag: v1

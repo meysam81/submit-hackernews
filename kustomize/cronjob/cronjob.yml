@@ -1,0 +1,20 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: submit-hackernews
+spec:
+  schedule: "30 13 5 7 *" # July 5th at 1:30 PM every year
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - envFrom:
+                - configMapRef:
+                    name: submit-hackernews
+                - secretRef:
+                    name: submit-hackernews
+              image: ghcr.io/meysam81/submit-hackernews
+              name: submit-hackernews
+              resources: {}
+          restartPolicy: Never

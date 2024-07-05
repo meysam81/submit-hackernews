@@ -1,0 +1,7 @@
+resources:
+  - ../base
+  - cronjob.yml
+
+images:
+  - name: ghcr.io/meysam81/submit-hackernews
+    newTag: v1
