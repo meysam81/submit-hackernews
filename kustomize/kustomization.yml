@@ -1,0 +1,16 @@
+configMapGenerator:
+  - name: submit-hackernews
+    envs:
+      - configs.env
+
+secretGenerator:
+  - name: submit-hackernews
+    envs:
+      - secrets.env
+
+resources:
+  - job.yml
+
+images:
+  - name: ghcr.io/meysam81/submit-hackernews
+    newTag: v1

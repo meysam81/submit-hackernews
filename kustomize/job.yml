@@ -1,0 +1,17 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: submit-hackernews
+spec:
+  template:
+    spec:
+      containers:
+        - envFrom:
+            - configMapRef:
+                name: submit-hackernews
+            - secretRef:
+                name: submit-hackernews
+          image: ghcr.io/meysam81/submit-hackernews
+          name: submit-hackernews
+          resources: {}
+      restartPolicy: Never
