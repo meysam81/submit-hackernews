@@ -112,6 +112,7 @@ login() {
     -H 'Cache-Control: no-cache' \
     -H 'TE: trailers' \
     --data-raw "goto=newest&acct=${USERNAME}&pw=${PASSWORD}" \
+    -o /dev/null \
     -v
 }
 submit() {
@@ -155,6 +156,7 @@ submit() {
     --data-urlencode "fnop=$fnop"  \
     --data-urlencode "title=$TITLE"  \
     --data-urlencode "url=$URL"  \
+    -o /dev/null \
     -v
 
 }
