@@ -46,7 +46,7 @@ jobs:
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -102,7 +102,7 @@ jobs:
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
@@ -157,7 +157,7 @@ jobs:
         with:
           images: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_REPOSITORY }}
       - name: Build and push
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           cache-from: type=gha
           cache-to: type=gha,mode=max
