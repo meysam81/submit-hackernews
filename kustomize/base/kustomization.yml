@@ -1,9 +1,0 @@
-configMapGenerator:
-  - name: submit-hackernews
-    envs:
-      - configs.env
-
-secretGenerator:
-  - name: submit-hackernews
-    envs:
-      - secrets.env
