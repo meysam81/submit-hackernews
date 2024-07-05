@@ -6,6 +6,7 @@ spec:
   schedule: "30 13 5 7 *" # July 5th at 1:30 PM every year
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 86400
       template:
         spec:
           containers:
