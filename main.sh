@@ -63,19 +63,19 @@ parse_envs() {
     set +u
 
     if [ -z "$USERNAME" ]; then
-        USERNAME=$HACKERNEWS_USERNAME
+        USERNAME="$HACKERNEWS_USERNAME"
     fi
 
     if [ -z "$PASSWORD" ]; then
-        PASSWORD=$HACKERNEWS_PASSWORD
+        PASSWORD="$HACKERNEWS_PASSWORD"
     fi
 
     if [ -z "$TITLE" ]; then
-        TITLE=$HACKERNEWS_TITLE
+        TITLE="$HACKERNEWS_TITLE"
     fi
 
     if [ -z "$URL" ]; then
-        URL=$HACKERNEWS_URL
+        URL="$HACKERNEWS_URL"
     fi
 
     set -u
