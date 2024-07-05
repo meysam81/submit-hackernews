@@ -7,7 +7,7 @@ RUN apk add --no-cache git \
 FROM curlimages/curl:8.8.0 AS runner
 
 USER root
-RUN apk update && apk upgrade
+RUN apk update && apk upgrade && apk add --no-cache grep
 USER curl_user:curl_group
 
 WORKDIR /app
