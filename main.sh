@@ -9,10 +9,10 @@ URL=
 COOKIE_JAR=
 
 usage() {
-    echo "Usage: $0 {-t|--title TITLE} {-u|--url URL} [-U|--username USERNAME] [-p|--password PASSWORD]"
+    echo "Usage: $0 [-t|--title TITLE] [-u|--url URL] [-U|--username USERNAME] [-p|--password PASSWORD]"
     echo "Options:"
-    echo "  -t, --title     Specify the title of the submission"
-    echo "  -u, --url       Specify the URL of the submission"
+    echo "  -t, --title     Specify the title of the submission (defaults to \$HACKERNEWS_TITLE)"
+    echo "  -u, --url       Specify the URL of the submission (defaults to \$HACKERNEWS_URL)"
     echo "  -U, --username  Specify the HackerNews username (defaults to \$HACKERNEWS_USERNAME)"
     echo "  -p, --password  Specify the HackerNews password (defaults to \$HACKERNEWS_PASSWORD)"
     echo ""
@@ -68,6 +68,14 @@ parse_envs() {
 
     if [ -z "$PASSWORD" ]; then
         PASSWORD=$HACKERNEWS_PASSWORD
+    fi
+
+    if [ -z "$TITLE" ]; then
+        TITLE=$HACKERNEWS_TITLE
+    fi
+
+    if [ -z "$URL" ]; then
+        URL=$HACKERNEWS_URL
     fi
 
     set -u
