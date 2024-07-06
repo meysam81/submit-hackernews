@@ -1,4 +1,7 @@
 name: submit-hackernews
+branding:
+  icon: menu
+  color: orange
 description: Submit links to Hacker News.
 inputs:
   username:
