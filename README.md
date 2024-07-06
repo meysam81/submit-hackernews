@@ -21,6 +21,42 @@ docker run \
   -u "https://example.com"
 ```
 
+## Usage: GitHub Actions
+
+You can run this in a GitHub Actions workflow. Here is an example:
+
+```yaml
+name: ci
+
+on:
+  workflow_dispatch:
+    inputs:
+      title:
+        description: The title of the link to submit.
+        required: true
+      url:
+        description: The URL of the link to submit.
+        required: true
+      verbose:
+        type: boolean
+        description: Verbose?
+        default: true
+
+jobs:
+  submit-hackernews:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Submit link to Hacker News
+        uses: meysam81/submit-hackernews@v1
+        with:
+          username: ${{ secrets.HACKERNEWS_USERNAME }}
+          password: ${{ secrets.HACKERNEWS_PASSWORD }}
+          title: ${{ github.event.inputs.title }}
+          url: ${{ github.event.inputs.url }}
+          verbose: ${{ github.event.inputs.verbose }}
+```
+
 ## Star History
 
 <a href="https://star-history.com/#meysam81/submit-hackernews&Timeline">
