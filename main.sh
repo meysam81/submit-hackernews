@@ -19,6 +19,16 @@ usage() {
     echo "All four arguments MUST be provided."
 }
 
+set_verbosity() {
+    set +u
+
+    if [ ! -z "$VERBOSE" ]; then
+        set -x
+    fi
+
+    set -u
+}
+
 prepare_cookie() {
     COOKIE_JAR=$(mktemp)
 }
@@ -162,6 +172,8 @@ submit() {
 }
 
 main() {
+    set_verbosity
+
     parse_args "$@"
     parse_envs
     validate_args

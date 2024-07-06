@@ -1,0 +1,28 @@
+name: submit-hackernews
+description: Submit links to Hacker News.
+inputs:
+  username:
+    description: The username of the Hacker News user.
+    required: true
+  password:
+    description: The password of the Hacker News user.
+    required: true
+  title:
+    description: The title of the link to submit.
+    required: true
+  url:
+    description: The URL of the link to submit.
+    required: true
+  verbose:
+    description: Whether to output verbose logs. Any non-empty value will be considered true.
+    required: false
+    default: ""
+runs:
+  using: docker
+  image: Dockerfile
+  env:
+    HACKERNEWS_USERNAME: ${{ inputs.username }}
+    HACKERNEWS_PASSWORD: ${{ inputs.password }}
+    HACKERNEWS_TITLE: ${{ inputs.title }}
+    HACKERNEWS_URL: ${{ inputs.url }}
+    VERBOSE: ${{ inputs.verbose }}
