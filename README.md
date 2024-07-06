@@ -4,6 +4,21 @@
 [![GitHub commit activity](https://img.shields.io/github/commit-activity/m/meysam81/submit-hackernews)](https://github.com/meysam81/submit-hackernews/commits/main/)
 [![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/meysam81/submit-hackernews)](https://github.com/meysam81/submit-hackernews)
 [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/meysam81/submit-hackernews/main.svg)](https://results.pre-commit.ci/latest/github/meysam81/submit-hackernews/main)
+[![Docker Image Version](https://ghcr-badge.egpl.dev/meysam81/submit-hackernews/latest_tag?color=%2344cc11&ignore=latest&label=Docker+Image+Version&trim=)](https://github.com/users/meysam81/packages/container/package/submit-hackernews)
+[![Docker Image Size](https://ghcr-badge.egpl.dev/meysam81/submit-hackernews/size?color=%2344cc11&tag=latest&label=Docker+Image+Size&trim=)](https://github.com/users/meysam81/packages/container/package/submit-hackernews)
+
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [Submit HackerNews](#submit-hackernews)
+  - [Introduction](#introduction)
+  - [Usage: GitHub Actions](#usage-github-actions)
+  - [Star History](#star-history)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Introduction
 
 This small Shell script will submit links to HackerNews. It is hugely
 beneficial to automate the task of submission at desired schedules.
