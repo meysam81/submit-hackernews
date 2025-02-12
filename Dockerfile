@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS deps
+FROM golang:1.24-alpine AS deps
 
 RUN apk add --no-cache git \
   && go install github.com/ericchiang/pup@v0.4.0
