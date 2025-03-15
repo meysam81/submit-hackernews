@@ -16,6 +16,10 @@ jobs:
       contains(fromJson('["push","pull_request"]'), github.event_name) &&
       github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
     steps:
       - name: Build docker
         uses: meysam81/build-docker@main
