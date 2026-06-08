@@ -1,0 +1,58 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+
+version: 2
+
+before:
+  hooks:
+    - go mod download
+    - go mod verify
+
+builds:
+  - binary: submit-hackernews
+    main: .
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - "-trimpath"
+    ldflags:
+      - "-s"
+      - "-w"
+      - "-extldflags '-static'"
+      - "-X main.version={{.Version}}"
+      - "-X main.commit={{.Commit}}"
+      - "-X main.date={{.Date}}"
+      - "-X main.builtBy=goreleaser"
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+
+archives:
+  - id: default
+    formats:
+      - tar.gz
+    format_overrides:
+      - formats:
+          - zip
+        goos: windows
+    name_template: "{{ .ProjectName }}_{{ tolower .Os }}_{{ .Arch }}"
+
+dist: .goreleaser-dist
+
+report_sizes: true
+
+checksum:
+  algorithm: sha256
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"

@@ -17,58 +17,62 @@ repos:
     hooks:
       - id: check-added-large-files
         args: ["--maxkb=800"]
-      - id: check-ast
       - id: check-executables-have-shebangs
       - id: check-json
       - id: check-shebang-scripts-are-executable
-        exclude: .*templates/.*j2$
       - id: check-yaml
         args:
           - --allow-multiple-documents
-        exclude: mkdocs.yml
       - id: detect-private-key
       - id: detect-aws-credentials
         args:
           - --allow-missing-credentials
       - id: end-of-file-fixer
-        exclude: ads.txt
       - id: check-builtin-literals
       - id: check-case-conflict
-      - id: check-docstring-first
       - id: check-merge-conflict
       - id: check-symlinks
       - id: check-toml
       - id: check-vcs-permalinks
       - id: check-xml
-      - id: debug-statements
       - id: destroyed-symlinks
-      - id: file-contents-sorter
       - id: fix-byte-order-marker
-      - id: fix-encoding-pragma
       - id: forbid-new-submodules
       - id: forbid-submodules
       - id: mixed-line-ending
-      - id: name-tests-test
-      - id: requirements-txt-fixer
-      - id: sort-simple-yaml
       - id: trailing-whitespace
       - id: pretty-format-json
         args:
           - --autofix
-        exclude: .*docs/codes/2024/0012/junk/registration-flow-response.json
+        exclude: |
+          (?x)^(
+            renovate.json
+          )$
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
     rev: v9.23.0
     hooks:
       - id: commitlint
         stages: [commit-msg]
         additional_dependencies: ["@commitlint/config-conventional"]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.3
+  - repo: https://github.com/dnephin/pre-commit-golang
+    rev: v0.5.1
     hooks:
-      - id: ruff
-        args: [--fix]
-      - id: ruff-format
+      - id: go-fmt
+      - id: go-vet
+      - id: go-imports
+      - id: golangci-lint
+      - id: go-mod-tidy
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.30.1
+    hooks:
+      - id: gitleaks
   - repo: https://github.com/rhysd/actionlint
     rev: v1.7.8
     hooks:
       - id: actionlint
+  - repo: https://github.com/reteps/dockerfmt
+    rev: v0.3.9
+    hooks:
+      - id: dockerfmt
+        args:
+          - --indent=4

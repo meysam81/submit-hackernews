@@ -1,2 +1,12 @@
 .secrets
 node_modules/
+
+# Go build artifacts
+/submit-hackernews
+/entrypoint
+/dist/
+/.goreleaser-dist/
+*.test
+coverage.out
+coverage.html
+.envrc

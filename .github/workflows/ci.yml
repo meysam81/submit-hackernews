@@ -1,5 +1,9 @@
 name: ci
 
+concurrency:
+  cancel-in-progress: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+  group: ci-${{ github.ref_name }}-${{ github.event_name }}
+
 on:
   pull_request:
     branches:
@@ -7,14 +11,54 @@ on:
   push:
     branches:
       - main
-    tags:
-      - "*"
 
 jobs:
-  build-edge:
-    if: |
-      contains(fromJson('["push","pull_request"]'), github.event_name) &&
-      github.ref == 'refs/heads/main'
+  checks:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./go.mod
+      - name: Check formatting
+        run: test -z "$(gofmt -l .)" || { gofmt -l .; exit 1; }
+      - name: Check imports
+        run: |
+          go install golang.org/x/tools/cmd/goimports@latest
+          test -z "$(goimports -l .)" || { goimports -l .; exit 1; }
+      - name: Check go mod tidy
+        run: |
+          go mod tidy
+          git diff --exit-code go.mod go.sum
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.5.0
+      - name: go vet
+        run: go vet ./...
+      - name: go build
+        run: go build ./...
+
+  test:
+    if: contains(fromJson('["pull_request","push"]'), github.event_name)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./go.mod
+      - name: Run tests
+        run: go test -race -count=1 ./...
+
+  build-dev:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -24,16 +68,41 @@ jobs:
       - name: Build docker
         uses: meysam81/build-docker@main
         with:
+          build-args: |
+            VERSION=dev-${{ github.sha }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ github.event.head_commit.timestamp }}
+            BUILT_BY=github-actions
           cosign: true
-          image-extra-tags: |
-            ghcr.io/${{ github.repository }}:${{ github.run_id }}
-            ghcr.io/${{ github.repository }}:latest
           image-name: ghcr.io/${{ github.repository }}
+          image-extra-tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ github.run_id }}
+            ghcr.io/${{ github.repository }}:${{ github.sha }}
           kubescape: true
           kubescape-upload-sarif: true
+          platforms: linux/amd64
 
-  semantic-release:
+  release-please:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      releases_created: ${{ steps.release-please.outputs.releases_created }}
+      tag_name: ${{ steps.release-please.outputs.tag_name }}
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - id: release-please
+        name: Release please
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: go
+
+  build-prod:
+    needs: release-please
+    if: needs.release-please.outputs.releases_created == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -46,25 +115,48 @@ jobs:
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
-      - name: Setup bun
-        uses: oven-sh/setup-bun@v2
+          ref: ${{ needs.release-please.outputs.tag_name }}
+      - name: Cache docker
+        uses: actions/cache@v4
+        id: cache
         with:
-          bun-version: latest
-      - name: Install bun deps
-        run: bun install
-      - id: semantic-release
-        name: Release
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: bunx semantic-release@v24
-      - if: steps.semantic-release.outputs.version != ''
-        name: Build docker
+          path: |
+            /tmp/dockercache
+          key: docker-cache-${{ runner.os }}-${{ hashFiles('**/Dockerfile') }}
+          restore-keys: |
+            docker-cache-${{ runner.os }}-
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Setup Cosign CLI
+        uses: sigstore/cosign-installer@v3
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./go.mod
+      - name: Install goreleaser
+        run: |
+          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
+          sudo apt update
+          sudo apt install -y goreleaser
+          goreleaser --version
+      - name: Build docker
         uses: meysam81/build-docker@main
         with:
+          build-args: |
+            VERSION=${{ needs.release-please.outputs.tag_name }}
+            COMMIT=${{ github.sha }}
+            DATE=${{ github.event.head_commit.timestamp }}
+            BUILT_BY=github-actions
+          cache-from: type=local,src=/tmp/dockercache
+          cache-to: type=local,dest=/tmp/dockercache
+          checkout: false
           cosign: true
-          image-extra-tags: |
-            ghcr.io/${{ github.repository }}:${{ steps.semantic-release.outputs.version }}
           image-name: ghcr.io/${{ github.repository }}
+          image-extra-tags: |
+            ghcr.io/${{ github.repository }}:${{ needs.release-please.outputs.tag_name }}
           kubescape: true
           kubescape-upload-sarif: true
-          ref: ${{ steps.semantic-release.outputs.version }}
+      - env:
+          GITHUB_TOKEN: ${{ github.token }}
+        name: Run goreleaser
+        run: goreleaser release --clean

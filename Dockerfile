@@ -1,19 +1,35 @@
-FROM golang:1.25-alpine AS deps
-
-RUN apk add --no-cache git \
-  && go install github.com/ericchiang/pup@v0.4.0
-
-
-FROM curlimages/curl:8.16.0 AS runner
-
-USER root
-RUN apk update && apk upgrade && apk add --no-cache grep
-USER curl_user:curl_group
+FROM golang:1.26 AS mod
 
 WORKDIR /app
 
-COPY --from=deps /go/bin/pup /usr/local/bin/pup
+RUN --mount=type=bind,source=go.mod,target=go.mod \
+    --mount=type=bind,source=go.sum,target=go.sum \
+    --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+FROM golang:1.26 AS builder
+
+ARG VERSION=dev
+ARG COMMIT=none
+ARG DATE=unknown
+ARG BUILT_BY=docker
+
+WORKDIR /app
+
+ENV CGO_ENABLED=0
 
 COPY . .
 
-ENTRYPOINT ["/app/main.sh"]
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go build \
+    -ldflags="-s -w -extldflags '-static' -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${DATE} -X main.builtBy=${BUILT_BY}" \
+    -trimpath \
+    -o entrypoint
+
+FROM scratch AS final
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY LICENSE .
+COPY --from=builder /app/entrypoint /entrypoint
+
+ENTRYPOINT ["/entrypoint"]
