@@ -87,7 +87,9 @@ func TestSubmit(t *testing.T) {
 		case "/r":
 			b, _ := io.ReadAll(r.Body)
 			postForm = string(b)
-			w.WriteHeader(http.StatusFound)
+			http.Redirect(w, r, "/newest", http.StatusFound)
+		case "/newest":
+			_, _ = io.WriteString(w, `<html><body><a href="https://example.com">My Title</a></body></html>`)
 		default:
 			t.Errorf("unexpected path %q", r.URL.Path)
 		}
@@ -122,5 +124,38 @@ func TestSubmitMissingFormFields(t *testing.T) {
 	err := client.Submit(context.Background(), "t", "u")
 	if !errors.Is(err, ErrFormFieldMissing) {
 		t.Fatalf("err = %v, want ErrFormFieldMissing", err)
+	}
+}
+
+func TestSubmitRejected(t *testing.T) {
+	tests := []struct {
+		name string
+		// rPage is the HTTP 200 body returned by /r (no redirect to /newest).
+		rPage string
+	}{
+		{name: "known error", rPage: `<html>Unknown or expired link. Please go back and reload.</html>`},
+		{name: "form re-rendered", rPage: `<html><form><input name="fnid" value="x"><input name="fnop" value="submit-page"></form></html>`},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				switch r.URL.Path {
+				case "/submitlink":
+					_, _ = io.WriteString(w, `<input name="fnid" value="tok"><input name="fnop" value="submit-page">`)
+				case "/r":
+					_, _ = io.WriteString(w, tt.rPage)
+				default:
+					t.Errorf("unexpected path %q", r.URL.Path)
+				}
+			}))
+			defer srv.Close()
+
+			client := testClient(t, srv.URL)
+			err := client.Submit(context.Background(), "My Title", "https://example.com")
+			if !errors.Is(err, ErrSubmissionRejected) {
+				t.Fatalf("err = %v, want ErrSubmissionRejected", err)
+			}
+		})
 	}
 }

@@ -101,7 +101,7 @@ from a shell, a container, or a GitHub Action.
 | `--url`             | `-u`  | `HACKERNEWS_URL`       | yes      | URL of the submission.                            |
 | `--username`        | `-U`  | `HACKERNEWS_USERNAME`  | yes      | Hacker News username.                             |
 | `--password`        | `-p`  | `HACKERNEWS_PASSWORD`  | yes      | Hacker News password.                             |
-| `--verbose`         |       | `VERBOSE`              | no       | Any non-empty value enables debug logging.        |
+| `--verbose`         |       | `VERBOSE`              | no       | Enable verbose logging (request/response details).|
 
 ## Development
 

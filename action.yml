@@ -17,7 +17,7 @@ inputs:
     description: The URL of the link to submit.
     required: true
   verbose:
-    description: Whether to output verbose logs. Any non-empty value will be considered true.
+    description: Enable verbose logging (request/response details). Set to "true" to enable.
     required: false
     default: ""
 runs:

@@ -38,8 +38,15 @@ func (c *Client) Login(ctx context.Context, username, password string) error {
 	if err != nil {
 		return fmt.Errorf("read login response: %w", err)
 	}
+	c.log.Debug().Int("status", resp.StatusCode).Int("body_bytes", len(body)).Msg("login response")
 	if strings.Contains(string(body), "Bad login") {
 		return ErrInvalidCredentials
+	}
+
+	// HN signals a successful login by setting the "user" session cookie rather
+	// than via the status code, so verify the jar actually captured it.
+	if !c.loggedIn() {
+		return fmt.Errorf("%w: no session cookie was set", ErrInvalidCredentials)
 	}
 
 	c.log.Info().Str("username", username).Msg("logged in")

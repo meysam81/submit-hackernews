@@ -10,6 +10,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 	"time"
 
 	"github.com/meysam81/submit-hackernews/internal/logger"
@@ -19,6 +20,9 @@ const (
 	defaultBaseURL   = "https://news.ycombinator.com"
 	defaultUserAgent = "Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0"
 	defaultTimeout   = 30 * time.Second
+
+	// sessionCookie is the cookie Hacker News sets on a successful login.
+	sessionCookie = "user"
 )
 
 // ErrInvalidCredentials is returned when Hacker News rejects the login.
@@ -84,17 +88,46 @@ func (c *Client) newRequest(ctx context.Context, method, path string, body io.Re
 		return nil, err
 	}
 
+	// Hacker News gates submissions behind a front end that expects a
+	// browser-like request. These mirror the headers a real Firefox sends (and
+	// the headers the original curl-based tool sent). Accept-Encoding is left
+	// to net/http so it can transparently decompress the gzip response.
 	req.Header.Set("User-Agent", c.userAgent)
-	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-	req.Header.Set("Accept-Language", "en-US")
+	req.Header.Set("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
+	req.Header.Set("Accept-Language", "en-US,en;q=0.5")
+	req.Header.Set("DNT", "1")
+	req.Header.Set("Sec-GPC", "1")
+	req.Header.Set("Upgrade-Insecure-Requests", "1")
+	req.Header.Set("Sec-Fetch-Dest", "document")
+	req.Header.Set("Sec-Fetch-Mode", "navigate")
+	req.Header.Set("Sec-Fetch-Site", "same-origin")
+	req.Header.Set("Sec-Fetch-User", "?1")
+	req.Header.Set("Priority", "u=1")
+	req.Header.Set("Pragma", "no-cache")
+	req.Header.Set("Cache-Control", "no-cache")
 	req.Header.Set("Origin", c.baseURL)
 	req.Header.Set("Referer", c.baseURL+"/")
 
 	return req, nil
 }
 
+// loggedIn reports whether the cookie jar holds the Hacker News session cookie
+// (named "user"), which is the definitive signal that a login succeeded.
+func (c *Client) loggedIn() bool {
+	u, err := url.Parse(c.baseURL)
+	if err != nil {
+		return false
+	}
+	for _, cookie := range c.http.Jar.Cookies(u) {
+		if cookie.Name == sessionCookie {
+			return true
+		}
+	}
+	return false
+}
+
 // logClose logs a response-body close error instead of discarding it. It is
-// meant to be deferred: defer c.logClose(resp.Body.Close()).
+// meant to be deferred: defer func() { c.logClose(resp.Body.Close()) }().
 func (c *Client) logClose(err error) {
 	if err != nil {
 		c.log.Warn().Err(err).Msg("close response body")

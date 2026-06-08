@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/meysam81/submit-hackernews/internal/hackernews"
 	"github.com/meysam81/submit-hackernews/internal/logger"
@@ -21,11 +20,11 @@ var (
 
 func main() {
 	var (
-		title      string
-		link       string
-		username   string
-		password   string
-		verboseRaw string
+		title    string
+		link     string
+		username string
+		password string
+		verbose  bool
 	)
 
 	cmd := &cli.Command{
@@ -61,15 +60,15 @@ func main() {
 				Sources:     cli.EnvVars("HACKERNEWS_PASSWORD"),
 				Destination: &password,
 			},
-			&cli.StringFlag{
+			&cli.BoolFlag{
 				Name:        "verbose",
-				Usage:       "enable verbose (debug) logging; any non-empty value enables it",
+				Usage:       "enable verbose logging (request/response details)",
 				Sources:     cli.EnvVars("VERBOSE"),
-				Destination: &verboseRaw,
+				Destination: &verbose,
 			},
 		},
 		Action: func(ctx context.Context, _ *cli.Command) error {
-			log := logger.New(truthy(verboseRaw))
+			log := logger.New(verbose)
 
 			var errs []error
 			if title == "" {
@@ -105,17 +104,5 @@ func main() {
 	if err := cmd.Run(context.Background(), os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
-	}
-}
-
-// truthy reports whether a string sourced from an environment variable should
-// be treated as enabled. It mirrors the original shell behaviour (any non-empty
-// value is true) while still treating the obvious negatives as off.
-func truthy(s string) bool {
-	switch strings.ToLower(strings.TrimSpace(s)) {
-	case "", "0", "false", "no", "off":
-		return false
-	default:
-		return true
 	}
 }
