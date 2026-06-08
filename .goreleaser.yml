@@ -3,6 +3,10 @@
 
 version: 2
 
+env:
+  - GITHUB_TOKEN
+  - COSIGN_EXPERIMENTAL=true
+
 before:
   hooks:
     - go mod download
@@ -43,7 +47,50 @@ archives:
 
 dist: .goreleaser-dist
 
+dockers_v2:
+  - id: submit-hackernews
+    images:
+      - ghcr.io/meysam81/{{ .ProjectName }}
+    dockerfile: Dockerfile.goreleaser
+    platforms:
+      - linux/amd64
+    tags:
+      - "{{ if not .IsSnapshot }}v{{ .Version }}{{ end }}"
+      - "{{ if not .IsSnapshot }}v{{ .Major }}{{ end }}"
+      - "{{ if not .IsSnapshot }}v{{ .Major }}.{{ .Minor }}{{ end }}"
+      - "{{ if not .IsSnapshot }}v{{ .Major }}.{{ .Minor }}.{{ .Patch }}{{ end }}"
+      - "{{ .FullCommit }}"
+      - "{{ if not .IsSnapshot }}latest{{ end }}"
+    labels:
+      "org.opencontainers.image.created": "{{.Date}}"
+      "org.opencontainers.image.description": "Submit links to Hacker News."
+      "org.opencontainers.image.name": "{{.ProjectName}}"
+      "org.opencontainers.image.revision": "{{.FullCommit}}"
+      "org.opencontainers.image.source": "{{.GitURL}}"
+      "org.opencontainers.image.version": "{{.Version}}"
+
+docker_signs:
+  - id: default
+    cmd: cosign
+    args:
+      - "sign"
+      - "--yes"
+      - "${artifact}"
+    output: true
+
+docker_digest:
+  name_template: "digest.txt"
+  disable: "{{ .Env.NO_DIGEST }}"
+
 report_sizes: true
+
+milestones:
+  - close: true
+    fail_on_error: false
+    name_template: "{{ .Tag }}"
+
+announce:
+  skip: "{{gt .Patch 0}}"
 
 checksum:
   algorithm: sha256

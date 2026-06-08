@@ -58,7 +58,9 @@ jobs:
         run: go test -race -count=1 ./...
 
   build-dev:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      !startsWith(github.event.head_commit.message, 'chore(main): release')
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,6 +85,50 @@ jobs:
           kubescape-upload-sarif: true
           platforms: linux/amd64
 
+  simulate-prod:
+    if: |
+      github.event_name == 'push' && github.ref == 'refs/heads/main' &&
+      !startsWith(github.event.head_commit.message, 'chore(main): release')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+    env:
+      DOCKER_BUILD_SUMMARY: "false"
+      DOCKER_BUILD_RECORD_UPLOAD: "false"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - name: Install syft
+        uses: anchore/sbom-action/download-syft@v0
+      - name: Setup Cosign CLI
+        uses: sigstore/cosign-installer@v3
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ./go.mod
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Run GoReleaser (snapshot)
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean --snapshot
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: goreleaser
+          path: .goreleaser-dist
+          retention-days: 3
+
   release-please:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -100,31 +146,26 @@ jobs:
         with:
           release-type: go
 
-  build-prod:
+  deploy-prod:
     needs: release-please
     if: needs.release-please.outputs.releases_created == 'true'
     runs-on: ubuntu-latest
     permissions:
+      attestations: write
       contents: write
-      packages: write
-      issues: write
-      pull-requests: write
       id-token: write
+      issues: write
+      packages: write
+      pull-requests: write
+    env:
+      DOCKER_BUILD_SUMMARY: "false"
+      DOCKER_BUILD_RECORD_UPLOAD: "false"
     steps:
       - name: Checkout
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
           ref: ${{ needs.release-please.outputs.tag_name }}
-      - name: Cache docker
-        uses: actions/cache@v4
-        id: cache
-        with:
-          path: |
-            /tmp/dockercache
-          key: docker-cache-${{ runner.os }}-${{ hashFiles('**/Dockerfile') }}
-          restore-keys: |
-            docker-cache-${{ runner.os }}-
       - name: Install syft
         uses: anchore/sbom-action/download-syft@v0
       - name: Setup Cosign CLI
@@ -133,30 +174,22 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version-file: ./go.mod
-      - name: Install goreleaser
-        run: |
-          echo 'deb [trusted=yes] https://repo.goreleaser.com/apt/ /' | sudo tee /etc/apt/sources.list.d/goreleaser.list
-          sudo apt update
-          sudo apt install -y goreleaser
-          goreleaser --version
-      - name: Build docker
-        uses: meysam81/build-docker@main
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          build-args: |
-            VERSION=${{ needs.release-please.outputs.tag_name }}
-            COMMIT=${{ github.sha }}
-            DATE=${{ github.event.head_commit.timestamp }}
-            BUILT_BY=github-actions
-          cache-from: type=local,src=/tmp/dockercache
-          cache-to: type=local,dest=/tmp/dockercache
-          checkout: false
-          cosign: true
-          image-name: ghcr.io/${{ github.repository }}
-          image-extra-tags: |
-            ghcr.io/${{ github.repository }}:${{ needs.release-please.outputs.tag_name }}
-          kubescape: true
-          kubescape-upload-sarif: true
-      - env:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
           GITHUB_TOKEN: ${{ github.token }}
-        name: Run goreleaser
-        run: goreleaser release --clean
+          NO_DIGEST: ${{ vars.NO_DIGEST }}

@@ -1,0 +1,8 @@
+# syntax=docker/dockerfile:1
+FROM gcr.io/distroless/static-debian13:nonroot AS final
+
+ARG TARGETPLATFORM
+
+COPY $TARGETPLATFORM/submit-hackernews /usr/local/bin/submit-hackernews
+
+ENTRYPOINT ["/usr/local/bin/submit-hackernews"]
