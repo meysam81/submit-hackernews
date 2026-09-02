@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/rs/zerolog v1.35.1
-	github.com/urfave/cli/v3 v3.9.0
+	github.com/urfave/cli/v3 v3.11.0
 	golang.org/x/net v0.55.0
 )
 
