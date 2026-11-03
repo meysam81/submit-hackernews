@@ -1,6 +1,6 @@
 module github.com/meysam81/submit-hackernews
 
-go 1.25.0
+go 1.27.3
 
 require (
 	github.com/rs/zerolog v1.35.1
