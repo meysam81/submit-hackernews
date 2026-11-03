@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/meysam81/submit-hackernews/compare/v1.1.0...v1.1.1) (2026-11-03)
+
+
+### Bug Fixes
+
+* **ci:** check imports with golangci-lint's goimports formatter ([#72](https://github.com/meysam81/submit-hackernews/issues/72)) ([9600c8f](https://github.com/meysam81/submit-hackernews/commit/9600c8f0beb5d79542d7caf18cf8c8ec23161893))
+
 ## [1.1.0](https://github.com/meysam81/submit-hackernews/compare/v1.0.4...v1.1.0) (2026-06-08)
 
 
