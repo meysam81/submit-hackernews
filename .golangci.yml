@@ -48,3 +48,7 @@ linters:
 issues:
   max-issues-per-linter: 50
   max-same-issues: 5
+
+formatters:
+  enable:
+    - goimports
