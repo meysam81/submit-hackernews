@@ -49,7 +49,7 @@ repos:
             renovate.json
           )$
   - repo: https://github.com/alessandrojcm/commitlint-pre-commit-hook
-    rev: e46582c71e18e81b19f77b5c754a6816bdd6c3f5 # frozen: v9.23.0
+    rev: 1f1ac45c93d1c2ce36b71330252c489a5f4f2724 # frozen: v9.27.0
     hooks:
       - id: commitlint
         language: node
@@ -68,11 +68,11 @@ repos:
     hooks:
       - id: gitleaks
   - repo: https://github.com/rhysd/actionlint
-    rev: e7d448ef7507c20fc4c88a95d0c448b848cd6127 # frozen: v1.7.8
+    rev: 914e7df21a07ef503a81201c76d2b11c789d3fca # frozen: v1.7.12
     hooks:
       - id: actionlint
   - repo: https://github.com/reteps/dockerfmt
-    rev: 21be1f69cec5e77953bdb40a2f1d95de0eeb56ac # frozen: v0.3.9
+    rev: d096f3231fc6eadc7009f63ee6cdc913b626e9ad # frozen: v0.6.0
     hooks:
       - id: dockerfmt
         args:
