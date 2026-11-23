@@ -1,4 +1,4 @@
-FROM golang:1.27.4 AS mod
+FROM golang:1.27.4@sha256:205c7636d74e0ffbe3d007162df7d74f859f5a8c8322dfb9f907977686c126cf AS mod
 
 WORKDIR /app
 
@@ -7,7 +7,7 @@ RUN --mount=type=bind,source=go.mod,target=go.mod \
     --mount=type=cache,target=/go/pkg/mod \
     go mod download
 
-FROM golang:1.27.4 AS builder
+FROM golang:1.27.4@sha256:205c7636d74e0ffbe3d007162df7d74f859f5a8c8322dfb9f907977686c126cf AS builder
 
 ARG VERSION=dev
 ARG COMMIT=none
