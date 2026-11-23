@@ -33,8 +33,7 @@ jobs:
           git diff --exit-code go.mod go.sum
       - name: golangci-lint
         uses: golangci/golangci-lint-action@ba0d7d2ec06a0ea1cb5fa41b2e4a3ab91d21278a # v9
-        with:
-          version: v2.5.0
+
       - name: go vet
         run: go vet ./...
       - name: go build
